@@ -1,0 +1,14 @@
+torch
+torchvision
+tensorflow
+tensorboard
+tensorboardX
+opencv-python
+dlib
+scikit-image
+scipy
+pillow
+tqdm
+imgaug
+pytorch-fid
+rarfile
