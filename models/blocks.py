@@ -92,6 +92,62 @@ class ConvLayer(nn.Module):
         return out
 
 
+class DehazeBlock(nn.Moduel):
+    """
+    Dehaze Block
+
+    """
+
+    def __init__(self,c_in,c_out,relu_type='relu',norm_type='bn',hg_depth=2):
+        super(DehazeBlock,self).__init__()
+        self.c_in      = c_in
+        self.c_out     = c_out
+        self.norm_type = norm_type
+        self.relu_type = relu_type
+        self.hg_depth  = hg_depth
+        kwargs = {'norm_type': norm_type, 'relu_type': relu_type}
+
+        self.preact_func = nn.Sequential(
+            NormLayer(c_in, norm_type=self.norm_type),
+            ReluLayer(c_in, self.relu_type),
+        )
+
+        self.relu = nn.ReLU(inplace=True)
+        self.conv = nn.Conv2d(3, 3, 3, 1, 1, bias=True)
+
+        self.e_conv1 = nn.Conv2d(3, 3, 1, 1, 0, bias=True)
+        self.e_conv2 = nn.Conv2d(3, 3, 3, 1, 1, bias=True)
+        self.e_conv3 = nn.Conv2d(6, 3, 5, 1, 2, bias=True)
+        self.e_conv4 = nn.Conv2d(6, 3, 7, 1, 3, bias=True)
+        self.e_conv5 = nn.Conv2d(12, 3, 3, 1, 1, bias=True)
+
+        self.att_func = HourGlassBlock(self.hg_depth, c_out, c_out, **kwargs)        
+
+
+    def forward(self,x):
+        identity = x
+        out = self.preact_func(x)
+
+        out = self.conv1(out)
+        out = self.conv2(out)
+        out = self.att_func(out)
+
+        x1 = self.relu(self.conv(x))
+        x1 = self.relu(self.e_conv1(x1))
+        x2 = self.relu(self.e_conv2(x1))
+        concat1 = torch.cat((x1, x2), 1)
+        x3 = self.relu(self.e_conv3(concat1))
+        concat2 = torch.cat((x2, x3), 1)
+        x4 = self.relu(self.e_conv4(concat2))
+        concat3 = torch.cat((x1, x2, x3, x4), 1)
+        x5 = self.relu(self.e_conv5(concat3))
+
+        haze_estimate = out + x5
+        clean_image = identity + self.relu((haze_estimate * x) - haze_estimate + 1) 
+        return clean_image
+
+
+
 class ResidualBlock(nn.Module):
     """
     Residual block recommended in: http://torch.ch/blog/2016/02/04/resnets.html
