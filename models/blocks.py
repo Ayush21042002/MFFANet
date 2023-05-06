@@ -92,7 +92,7 @@ class ConvLayer(nn.Module):
         return out
 
 
-class DehazeBlock(nn.Moduel):
+class DehazeBlock(nn.Module):
     """
     Dehaze Block
 
