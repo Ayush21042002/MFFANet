@@ -128,8 +128,7 @@ class DehazeBlock(nn.Module):
         identity = x
         out = self.preact_func(x)
 
-        out = self.conv1(out)
-        out = self.conv2(out)
+        out = self.conv(out)
         out = self.att_func(out)
 
         x1 = self.relu(self.conv(x))
