@@ -56,7 +56,7 @@ class CelebADataset(BaseDataset):
         hr_img = self.aug(hr_img)
 
         # add random haze to image
-        tr = np.random.uniform(low = 0.1,high = 0.95)
+        tr = np.random.uniform(low = 0.5,high = 0.95)
         A = np.random.randint(low = 200, high = 255)
 
         haze_hr_img = np.array(hr_img)
